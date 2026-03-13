@@ -91,6 +91,40 @@ def get_stock_data(ticker, period="1y"):
     stock = yf.Ticker(ticker)
     return stock.history(period=period), stock.info
 
+# 1. 로그인 상태 확인 함수
+def check_password():
+    """비밀번호가 맞으면 True를 반환합니다."""
+
+    def password_entered():
+        """비밀번호를 검사하고 세션 상태를 업데이트합니다."""
+        if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # 보안을 위해 세션에서 비번 삭제
+        else:
+            st.session_state["password_correct"] = False
+
+    # 이미 인증되었다면 True 반환
+    if st.session_state.get("password_correct", False):
+        return True
+
+    # 로그인 화면 인터페이스
+    st.title("🔒 Quant Agent 접속 제한")
+    st.text_input(
+        "비밀번호를 입력하세요", type="password", on_change=password_entered, key="password"
+    )
+    
+    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+        st.error("😕 비밀번호가 틀렸습니다.")
+    
+    return False
+
+# 2. 인증 실행
+if not check_password():
+    st.stop()  # 인증 실패 시 아래 코드를 실행하지 않고 멈춤
+
+# --- 이 아래부터 기존 앱 코드 (sidebar, menu 등) 시작 ---
+st.success("환영합니다! 에이전트 시스템에 접속되었습니다.")
+
 # --- 사이드바 스캔 실행 ---
 st.sidebar.title("종목 발굴")
 menu = st.sidebar.radio(
